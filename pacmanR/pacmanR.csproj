@@ -57,25 +57,12 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Copy of psengine.js" />
     <Content Include="psengine.js" />
     <Content Include="img\Bricks.gif" />
     <Content Include="img\pacman.png" />
     <Content Include="index.html" />
-    <Content Include="JavaScript1.js" />
-    <Content Include="JavaScript2.js" />
-    <Content Include="main.js" />
-    <Content Include="psengine3.js" />
-    <Content Include="Scripts\babylon.math.js" />
     <None Include="Scripts\jquery-2.0.2.min.map" />
-    <Content Include="Scripts\JavaScript1.js" />
-    <Content Include="Scripts\JavaScript2.js" />
-    <Content Include="Scripts\JavaScript3.js" />
-    <Content Include="Scripts\JavaScript4.js" />
     <Content Include="Scripts\jquery-2.0.2.min.js" />
-    <Content Include="Scripts\psengine.js" />
-    <Content Include="Scripts\psengine2.js" />
-    <Content Include="SoftEngine.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
