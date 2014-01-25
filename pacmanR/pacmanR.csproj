@@ -57,6 +57,10 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="img\blockEmerald.png" />
+    <Content Include="img\brick.png" />
+    <Content Include="img\furnace_top.png" />
+    <Content Include="img\sandstone_carved.png" />
     <Content Include="psengine.js" />
     <Content Include="img\Bricks.gif" />
     <Content Include="img\pacman.png" />

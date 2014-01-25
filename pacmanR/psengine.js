@@ -23,8 +23,29 @@ var BackContextHandle = null;
 var CanvasHandle = null;
 var ContextHandle = null;
 
+var parseCanvas = document.createElement('canvas');
 
 
+var parseContext = parseCanvas.getContext('2d');
+
+
+
+var Brick = new Image();
+Brick.src = 'img/furnace_top.png';
+
+
+var brickheight;
+var brickwidth;
+var brickData
+
+Brick.onload = function () {
+
+    parseContext.drawImage(Brick, 0, 0);
+    brickData = parseContext.getImageData(0, 0, Brick.width, Brick.height);
+    brickData = brickData.data;
+    brickwidth = Brick.width;
+    brickheight = Brick.height;
+};
 
 function psengine() {
 
@@ -67,7 +88,7 @@ psengine.prototype.cameratransform = function(somepoint){
     var zdif = somepoint.z - CameraPos.z;
 
 
-    //transform the 3d points to the camera perspective
+    
     WorkingVertex.x = this.cosy * (this.sinz * ydif + this.cosz * xdif) - this.siny * zdif;
     WorkingVertex.y = this.sinx * (this.cosy * zdif + this.siny * (this.sinz * ydif + this.cosz * xdif)) + this.cosx * (this.cosz * ydif - this.sinz * xdif);
     WorkingVertex.z = this.cosx * (this.cosy * zdif + this.siny * (this.sinz * ydif + this.cosz * xdif)) - this.sinx * (this.cosz * ydif - this.sinz * xdif);
@@ -79,7 +100,7 @@ psengine.prototype.cameratransform = function(somepoint){
 
     WorkingVertex.y = -WorkingVertex.y;
 
-    //clip to a near view plane
+    
 
 
     return WorkingVertex;
@@ -108,7 +129,7 @@ brickModel.onload = function () {
     var TextureContext = TextureHandle.getContext('2d');
     TextureContext.drawImage(brickModel, 0, 0, brickModel.width, brickModel.height);
 
-    // Save actual texture info
+    
     TextureWidth = brickModel.width;
     TextureHeight = brickModel.height;
     TextureBuffer = TextureContext.getImageData(0, 0, brickModel.width, brickModel.height);
@@ -219,7 +240,9 @@ function levelData() {
     this.CubeUVs =
 [
     { a:{ u:0, v:0 }, b:{ u:0, v:1 }, c:{ u:1, v:1 } },
-    { a:{ u:0, v:0 }, b:{ u:1, v:0 }, c:{ u:1, v:1 } }]
+    { a: { u: 1, v: 1 }, b: { u: 1, v: 0 }, c: { u: 0, v: 0 }},
+    { a:{ u:1, v:0 }, b:{ u:0, v:0 }, c:{ u:0, v:1 } },
+    { a:{ u:0, v:1 }, b:{ u:1, v:1 }, c:{ u:1, v:0 } }]
 
 }
 
@@ -315,10 +338,13 @@ levelData.prototype.addBlock = function (x1, y1, z1) {
     this.wallFaces.push({ a: nextindex + 3, b: nextindex + 2, c: nextindex + 6, f: 0, color: { r: 136, g: 0, b: 0 } });
     this.wallFaces.push({ a: nextindex + 6, b: nextindex + 7, c: nextindex + 3, f: 1, color: { r: 136, g: 0, b: 0 } });
 
-    this.wallFaces.push({ a: nextindex + 0, b: nextindex + 5, c: nextindex + 1, f: 0, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 5, b: nextindex + 1, c: nextindex + 0, f: 2, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 0, b: nextindex + 4, c: nextindex + 5, f: 3, color: { r: 136, g: 0, b: 0 } });
+
+    /*
+     this.wallFaces.push({ a: nextindex + 0, b: nextindex + 5, c: nextindex + 1, f: 0, color: { r: 136, g: 0, b: 0 } });
     this.wallFaces.push({ a: nextindex + 0, b: nextindex + 4, c: nextindex + 5, f: 1, color: { r: 136, g: 0, b: 0 } });
-
-
+    */
 
 
 };
@@ -360,7 +386,7 @@ levelData.prototype.draw = function () {
     var fps = 1000 / (newtime - oldtime);
     oldtime = newtime;
 
-    outputdiv.innerHTML = 'fps : ' + fps + '   shaded tris drawn :  ' + shadedtris + ' , solid tris drawn: ' + solidtris ;
+    outputdiv.innerHTML = 'fps : ' + fps + '   textured tris drawn :  ' + shadedtris + ' , solid tris drawn: ' + solidtris ;
     shadedtris = 0;
     solidtris = 0;
 
@@ -546,29 +572,30 @@ levelData.prototype.draw = function () {
 
 
                     var tricolor = { r: 0, g: 0, b: 0 };
-
+                    /*
                     var PointAColor = { r: 0, g: 0, b: 0 };
                     var PointBColor = { r: 0, g: 0, b: 0 };
                     var PointCColor = { r: 0, g: 0, b: 0 };
-
+                    */
 
                     var colormulti = (14 * (orderedFaces[i].d.lightangle - 1)) / orderedFaces[i].d.lightdistance;
+                 
+
                     /*
-                    tricolor.r = (((orderedFaces[i].d.angle - 1.57) / 1.57) * tricolor.r) + ((tricolor.r * 2) / orderedFaces[i].d.distance);
-                    tricolor.g = (((orderedFaces[i].d.angle - 1.57) / 1.57) * tricolor.g) + ((tricolor.g * 2) / orderedFaces[i].d.distance);
-                    tricolor.b = (((orderedFaces[i].d.angle - 1.57) / 1.57) * tricolor.b) + ((tricolor.b * 2) / orderedFaces[i].d.distance);
-                    */
                     tricolor.r = Math.min(colormulti * orderedFaces[i].color.r, orderedFaces[i].color.r + 80);
                     tricolor.g = Math.min(colormulti * orderedFaces[i].color.b, orderedFaces[i].color.g + 80);
                     tricolor.b = Math.min(colormulti * orderedFaces[i].color.g, orderedFaces[i].color.b + 80);
+                    */
 
 
+
+                    /*
 
                     var PointAMulti = (14 * (orderedFaces[i].d.la - 1)) / orderedFaces[i].d.lda; //(vertexdistance[orderedFaces[i].a]);
                     var PointBMulti = (14 * (orderedFaces[i].d.angle - 1)) / orderedFaces[i].d.distance;//(vertexdistance[orderedFaces[i].b]);
                     var PointCMulti = (14 * (orderedFaces[i].d.angle - 1)) / orderedFaces[i].d.distance;//(vertexdistance[orderedFaces[i].c]);
 
-
+                   
 
 
                     PointAColor.r = Math.min(PointAMulti * orderedFaces[i].color.r, orderedFaces[i].color.r + 80);
@@ -583,15 +610,18 @@ levelData.prototype.draw = function () {
                     PointCColor.b = Math.min(PointCMulti * orderedFaces[i].color.b, orderedFaces[i].color.b + 80);
                     PointCColor.g = Math.min(PointCMulti * orderedFaces[i].color.g, orderedFaces[i].color.g + 80);
                     
-                    
+                    */
 
                     
 
                     //DrawTri(PointA.x, PointA.y, PointB.x, PointB.y, PointC.x, PointC.y, orderedFaces[i].color);
 
+                    if (colormulti < .1) {
 
+                        colormulti = .1;
+                    }
 
-                    ScanlineTri3(PointA, PointB, PointC, tricolor, UVA, UVB, UVC);
+                    ScanlineTri3(PointA, PointB, PointC, colormulti, UVA, UVB, UVC);
               
                    
 
@@ -604,18 +634,7 @@ levelData.prototype.draw = function () {
         
     }
 
-    //context.putImageData(renderImageData, 0, 0);
 
-
-
-    //dunno if i need any of this V
-    //renderContext.putImageData(renderImageData, 0, 0);
-    
-    //context.drawImage(renderCanvas, 0, 0);
-
-    //renderImageData = context.getImageData(0, 0, CanvasWidth, CanvasHeight);
-
-    //context.putImageData(renderImageData, 0, 0);
 
 }
 
@@ -628,79 +647,13 @@ psengine.prototype.render = function () {
 
 
 
-var CubeVertex =
-[
-    { x: -1, y: -1, z: 1 },
-    { x: -1, y: 1, z: 1 },
-    { x: 1, y: 1, z: 1 },
-    { x: 1, y: -1, z: 1 },
-    { x: -1, y: -1, z: -1 },
-    { x: -1, y: 1, z: -1 },
-    { x: 1, y: 1, z: -1 },
-    { x: 1, y: -1, z: -1 },
-    /*
-    { x: -5, y: -1, z: 1 },
-    { x: -5, y: 1, z: 1 },
-    { x: -3, y: 1, z: 1 },
-    { x: -3, y: -1, z: 1 },
-    { x: -5, y: -1, z: -1 },
-    { x: -5, y: 1, z: -1 },
-    { x: -3, y: 1, z: -1 },
-    { x: -3, y: -1, z: -1 },
-    */
-];
 
 
 
 
-var CubeFaces =
-[
-    { a: 0, b: 1, c: 2, i: 1 },
-    { a: 2, b: 3, c: 0, i: 1 },
 
-    { a: 1, b: 5, c: 6, i: 2 },
-    { a: 6, b: 2, c: 1, i: 2 },
 
-    { a: 5, b: 4, c: 7, i: 3 },
-    { a: 7, b: 6, c: 5, i: 3 },
 
-    { a: 4, b: 0, c: 3, i: 4 },
-    { a: 3, b: 7, c: 4, i: 4 },
-
-    { a: 3, b: 2, c: 6, i: 5 },
-    { a: 6, b: 7, c: 3, i: 5 },
-
-    { a: 0, b: 5, c: 1, i: 6 },
-    { a: 0, b: 4, c: 5, i: 6 },
-];
-
-/*
-
-{ a: 8, b: 9, c: 10, i: 9 },
-{ a: 10, b: 11, c: 8, i: 9 },
-
-// Top
-{ a: 9, b: 13, c: 14, i: 2 },
-{ a: 14, b: 10, c: 9, i: 2 },
-
-// Back
-{ a: 13, b: 12, c: 15, i: 3 },
-{ a: 15, b: 14, c: 13, i: 3 },
-
-// Bottom
-{ a: 12, b: 8, c: 11, i: 4 },
-{ a: 11, b: 15, c: 12, i: 4 },
-
-// Right
-{ a: 11, b: 10, c: 14, i: 5 },
-{ a: 14, b: 15, c: 11, i: 5 },
-
-// Left
-{ a: 8, b: 13, c: 9, i: 6 },
-{ a: 8, b: 12, c: 13, i: 6 },
-
-];
-*/
 
 var newLevel = new levelData();
 var keyboard = new KeyboardState();
@@ -708,12 +661,12 @@ var keyboard = new KeyboardState();
 
 var CameraPos = { x: 0, y: 8, z: -10 };
 
-// Camera rotation (Pitch, yaw, roll)
+
 var CameraRot = { x: 0, y: 0, z: 0 };
 
 CameraRot.x = (Math.PI / 2);
 
-// Camera distortion
+
 var RatioConst = 360;
 
 
@@ -960,7 +913,7 @@ function moveCamera() {
         CameraRot.y += .05;
     }
 
-    console.log("xrot : " + CameraRot.x + "    yrot : " + CameraRot.y + "zrot : " + CameraRot.z);
+    //console.log("xrot : " + CameraRot.x + "    yrot : " + CameraRot.y + "zrot : " + CameraRot.z);
 
 }
 
@@ -985,50 +938,7 @@ function Main() {
         keyboard.setkeydown(e.which);
 
         var keyid = e.which;
-        /*
-        if (keyid == 65) {
-
-            CameraPos.z += .1 * Math.sin(3.14-CameraRot.y);
-            CameraPos.x += .1 * Math.cos(3.14-CameraRot.y);
-        }
-        else if (keyid == 68) {
-
-            CameraPos.z -= .1 * Math.sin(3.14 - CameraRot.y);
-            CameraPos.x -= .1 * Math.cos(3.14 - CameraRot.y);
-        }
-        else if (keyid == 83) {
-
-            CameraPos.z -= .1 * Math.sin(1.57 - CameraRot.y);
-            CameraPos.x -= .1 * Math.cos(1.57 - CameraRot.y);
-        }
-        else if (keyid == 87) {
-
-            CameraPos.z += .1*Math.sin(1.57-CameraRot.y);
-            CameraPos.x += .1*Math.cos(1.57-CameraRot.y);
-
-        }
-
-
-        else if (keyid == 73) {
-
-            CameraRot.x += .05;
-        }
-        else if (keyid == 75) {
-
-            CameraRot.x -= .05;
-        }
-        else if (keyid == 74) {
-
-            CameraRot.y -= .05;
-        }
-        else if (keyid == 76) {
-
-            CameraRot.y += .05;
-        }
-
-        outputdiv.innerHTML = Math.cos(CameraRot.y) + '    ' + Math.sin(CameraRot.y);
-
-        */
+        
 
     });
 
@@ -1056,10 +966,7 @@ function Main() {
     CanvasHeight = ContextHandle.canvas.clientHeight;
     
 
-    BackCanvasHandle = document.createElement("canvas");
-    BackCanvasHandle.width = CanvasWidth;
-    BackCanvasHandle.height = CanvasHeight;
-    BackContextHandle = BackCanvasHandle.getContext("2d");
+   
 
 
     for (var i = -5; i <= 5; i++) {
@@ -1089,7 +996,7 @@ function Main() {
         for (var yc = -30; yc < 30; yc = yc + 4) {
 
 
-            newLevel.addFloor(xc, yc);
+            //newLevel.addFloor(xc, yc);
 
         }
 
@@ -1097,365 +1004,7 @@ function Main() {
     }
     
 
-    /*
-    
-    newLevel.addSegment(-11, 0, -10, 0);
-    newLevel.addSegment(-10, 0, -9, 0);
-    newLevel.addSegment(-9, 0, -8, 0);
-    newLevel.addSegment(-8, 0, -7, 0);
-    newLevel.addSegment(-7, 0, -6, 0);
-    newLevel.addSegment(-6, 0, -5, 0);
-    newLevel.addSegment(-5, 0, -4, 0);
-    newLevel.addSegment(-4, 0, -3, 0);
-    newLevel.addSegment(-3, 0, -2, 0);
-    newLevel.addSegment(-2, 0, -1, 0);
-    newLevel.addSegment(-1, 0, 0, 0);
-
-    
-    newLevel.addSegment(0, 0, 1, 0);
-    newLevel.addSegment(1, 0, 2, 0);
-    newLevel.addSegment(2, 0, 3, 0);
-    newLevel.addSegment(3, 0, 3, -1);
-    newLevel.addSegment(3, -1, 3, -2);
-    newLevel.addSegment(3, -2, 2, -2);
-    newLevel.addSegment(2, -2, 1, -2);
-    newLevel.addSegment(1, -2, 0, -2);
-    newLevel.addSegment(0, -2, -1, -2);
-    newLevel.addSegment(-1, -2, -2, -2);
-    newLevel.addSegment(-2, -2, -3, -2);
-    newLevel.addSegment(-3, -2, -4, -2);
-    newLevel.addSegment(-4, -2, -5, -2);
-    newLevel.addSegment(-5, -2, -6, -2);
-    newLevel.addSegment(-6, -2, -7, -2);
-    newLevel.addSegment(-7, -2, -8, -2);
-    newLevel.addSegment(-8, -2, -9, -2);
-    newLevel.addSegment(-9, -2, -10, -2);
-    newLevel.addSegment(-10, -2, -11, -2);
-    newLevel.addSegment(-11, -2, -11, -1);
-    newLevel.addSegment(-11, -1, -11, 0);
-
-    
-    newLevel.addSegment(6, -7, 6, -6);
-    newLevel.addSegment(6, -6, 6, -5);
-    newLevel.addSegment(6, -5, 6, -4);
-    newLevel.addSegment(6, -4, 6, -3);
-    newLevel.addSegment(6, -3, 6, -2);
-    newLevel.addSegment(6, -2, 6, -1);
-    newLevel.addSegment(6, -1, 6, 0);
-    newLevel.addSegment(6, 0, 6, 1);
-    newLevel.addSegment(6, 1, 6, 2);
-    newLevel.addSegment(6, 2, 6, 3);
-    newLevel.addSegment(6, 3, 6, 4);
-    newLevel.addSegment(6, 4, 6, 5);
-    newLevel.addSegment(6, 5, 7, 5);
-    newLevel.addSegment(7, 5, 8, 5);
-    newLevel.addSegment(8, 5, 8, 4);
-    newLevel.addSegment(8, 4, 8, 3);
-    newLevel.addSegment(8, 3, 8, 2);
-    newLevel.addSegment(8, 2, 8, 1);
-    newLevel.addSegment(8, 1, 8, 0);
-    newLevel.addSegment(8, 0, 8, -1);
-    newLevel.addSegment(8, -1, 8, -2);
-    newLevel.addSegment(8, -2, 8, -3);
-    newLevel.addSegment(8, -3, 8, -4);
-    newLevel.addSegment(8, -4, 8, -5);
-    newLevel.addSegment(8, -5, 8, -6);
-    newLevel.addSegment(8, -6, 8, -7);
-    newLevel.addSegment(8, -7, 7, -7);
-    newLevel.addSegment(7, -7, 6, -7);
-    newLevel.addSegment(-16, 5, -16, 4);
-    newLevel.addSegment(-16, 4, -16, 3);
-    newLevel.addSegment(-16, 3, -16, 2);
-    newLevel.addSegment(-16, 2, -16, 1);
-    newLevel.addSegment(-16, 1, -16, 0);
-    newLevel.addSegment(-16, 0, -16, -1);
-    newLevel.addSegment(-16, -1, -16, -2);
-    newLevel.addSegment(-16, -2, -16, -3);
-    newLevel.addSegment(-16, -3, -16, -4);
-    newLevel.addSegment(-16, -4, -16, -5);
-    newLevel.addSegment(-16, -5, -16, -6);
-    newLevel.addSegment(-16, -6, -16, -7);
-    newLevel.addSegment(-16, -7, -17, -7);
-    newLevel.addSegment(-17, -7, -18, -7);
-    newLevel.addSegment(-18, -7, -18, -6);
-    newLevel.addSegment(-18, -6, -18, -5);
-    newLevel.addSegment(-18, -5, -18, -4);
-    newLevel.addSegment(-18, -4, -18, -3);
-    newLevel.addSegment(-18, -3, -18, -2);
-    newLevel.addSegment(-18, -2, -18, -1);
-    newLevel.addSegment(-18, -1, -18, 0);
-    newLevel.addSegment(-18, 0, -18, 1);
-    newLevel.addSegment(-18, 1, -18, 2);
-    newLevel.addSegment(-18, 2, -18, 3);
-    newLevel.addSegment(-18, 3, -18, 4);
-    newLevel.addSegment(-18, 4, -18, 5);
-    newLevel.addSegment(-18, 5, -17, 5);
-    newLevel.addSegment(-17, 5, -16, 5);
-    newLevel.addSegment(-16, 5, -15, 5);
-    newLevel.addSegment(-15, 5, -14, 5);
-    newLevel.addSegment(-14, 5, -13, 5);
-    newLevel.addSegment(-13, 5, -12, 5);
-    newLevel.addSegment(-12, 5, -11, 5);
-    newLevel.addSegment(-11, 5, -10, 5);
-    newLevel.addSegment(-10, 5, -9, 5);
-    newLevel.addSegment(-9, 5, -9, 4);
-    newLevel.addSegment(-9, 4, -9, 3);
-    newLevel.addSegment(-9, 3, -10, 3);
-    newLevel.addSegment(-10, 3, -11, 3);
-    newLevel.addSegment(-11, 3, -12, 3);
-    newLevel.addSegment(-12, 3, -13, 3);
-    newLevel.addSegment(-13, 3, -14, 3);
-    newLevel.addSegment(-14, 3, -15, 3);
-    newLevel.addSegment(-15, 3, -16, 3);
-    newLevel.addSegment(6, 3, 5, 3);
-    newLevel.addSegment(5, 3, 4, 3);
-    newLevel.addSegment(4, 3, 3, 3);
-    newLevel.addSegment(3, 3, 2, 3);
-    newLevel.addSegment(2, 3, 1, 3);
-    newLevel.addSegment(1, 3, 0, 3);
-    newLevel.addSegment(0, 3, -1, 3);
-    newLevel.addSegment(-1, 3, -2, 3);
-    newLevel.addSegment(-2, 3, -2, 4);
-    newLevel.addSegment(-2, 4, -2, 5);
-    newLevel.addSegment(-2, 5, -1, 5);
-    newLevel.addSegment(-1, 5, 0, 5);
-    newLevel.addSegment(0, 5, 1, 5);
-    newLevel.addSegment(1, 5, 2, 5);
-    newLevel.addSegment(2, 5, 3, 5);
-    newLevel.addSegment(3, 5, 4, 5);
-    newLevel.addSegment(4, 5, 5, 5);
-    newLevel.addSegment(5, 5, 6, 5);
-    newLevel.addSegment(-5, 5, -6, 5);
-    newLevel.addSegment(-6, 5, -6, 6);
-    newLevel.addSegment(-6, 6, -6, 7);
-    newLevel.addSegment(-6, 7, -6, 8);
-    newLevel.addSegment(-6, 8, -6, 9);
-    newLevel.addSegment(-6, 9, -6, 10);
-    newLevel.addSegment(-6, 10, -6, 11);
-    newLevel.addSegment(-6, 11, -6, 12);
-    newLevel.addSegment(-6, 12, -6, 13);
-    newLevel.addSegment(-6, 13, -5, 13);
-    newLevel.addSegment(-5, 13, -5, 12);
-    newLevel.addSegment(-5, 12, -5, 11);
-    newLevel.addSegment(-5, 11, -5, 10);
-    newLevel.addSegment(-5, 10, -5, 9);
-    newLevel.addSegment(-5, 9, -5, 8);
-    newLevel.addSegment(-5, 8, -5, 7);
-    newLevel.addSegment(-5, 7, -5, 6);
-    newLevel.addSegment(-5, 6, -5, 5);
-    newLevel.addSegment(-5, 13, -4, 13);
-    newLevel.addSegment(-4, 13, -3, 13);
-    newLevel.addSegment(-3, 13, -2, 13);
-    newLevel.addSegment(-2, 13, -1, 13);
-    newLevel.addSegment(-1, 13, 0, 13);
-    newLevel.addSegment(0, 13, 1, 13);
-    newLevel.addSegment(1, 13, 2, 13);
-    newLevel.addSegment(2, 13, 3, 13);
-    newLevel.addSegment(3, 13, 4, 13);
-    newLevel.addSegment(4, 13, 5, 13);
-    newLevel.addSegment(5, 13, 6, 13);
-    newLevel.addSegment(6, 13, 7, 13);
-    newLevel.addSegment(7, 13, 8, 13);
-    newLevel.addSegment(8, 13, 9, 13);
-    newLevel.addSegment(9, 12, 9, 11);
-    newLevel.addSegment(9, 11, 9, 10);
-    newLevel.addSegment(9, 13, 9, 12);
-    newLevel.addSegment(9, 10, 8.002541300169264, 9.92875295001209);
-    newLevel.addSegment(8.002541300169264, 9.92875295001209, 7.00508260033853, 9.857505900024181);
-    newLevel.addSegment(7.00508260033853, 9.857505900024181, 6.007623900507795, 9.78625885003627);
-    newLevel.addSegment(6.007623900507795, 9.78625885003627, 5.01016520067706, 9.715011800048362);
-    newLevel.addSegment(5.01016520067706, 9.715011800048362, 4.012706500846324, 9.643764750060452);
-    newLevel.addSegment(4.012706500846324, 9.643764750060452, 3.0152478010155894, 9.572517700072542);
-    newLevel.addSegment(3.0152478010155894, 9.572517700072542, 2.0177891011848548, 9.501270650084633);
-    newLevel.addSegment(2.0177891011848548, 9.501270650084633, 1.0203304013541192, 9.430023600096723);
-    newLevel.addSegment(1.0203304013541192, 9.430023600096723, 0.022871701523383692, 9.358776550108812);
-    newLevel.addSegment(0.022871701523383692, 9.358776550108812, -0.9745869983073518, 9.287529500120904);
-    newLevel.addSegment(-0.9745869983073518, 9.287529500120904, -1.9720456981380856, 9.216282450132994);
-    newLevel.addSegment(-1.9720456981380856, 9.216282450132994, -2.969504397968821, 9.145035400145083);
-    newLevel.addSegment(-2.969504397968821, 9.145035400145083, -3.9669630977995567, 9.073788350157175);
-    newLevel.addSegment(-3.9669630977995567, 9.073788350157175, -4.9644217976302905, 9.002541300169264);
-    newLevel.addSegment(-6, 9, -6.99654575824488, 9.08304547985374);
-    newLevel.addSegment(-6.99654575824488, 9.08304547985374, -7.993091516489759, 9.16609095970748);
-    newLevel.addSegment(-7.993091516489759, 9.16609095970748, -8.989637274734639, 9.24913643956122);
-    newLevel.addSegment(-8.989637274734639, 9.24913643956122, -9.986183032979518, 9.33218191941496);
-    newLevel.addSegment(-9.986183032979518, 9.33218191941496, -10.982728791224398, 9.4152273992687);
-    newLevel.addSegment(-10.982728791224398, 9.4152273992687, -11.979274549469277, 9.49827287912244);
-    newLevel.addSegment(-11.979274549469277, 9.49827287912244, -12.975820307714157, 9.58131835897618);
-    newLevel.addSegment(-12.975820307714157, 9.58131835897618, -13.972366065959037, 9.66436383882992);
-    newLevel.addSegment(-13.972366065959037, 9.66436383882992, -14.968911824203916, 9.74740931868366);
-    newLevel.addSegment(-14.968911824203916, 9.74740931868366, -15.965457582448796, 9.8304547985374);
-    newLevel.addSegment(-15.965457582448796, 9.8304547985374, -16.962003340693677, 9.91350027839114);
-    newLevel.addSegment(-16.962003340693677, 9.91350027839114, -17.958549098938555, 9.99654575824488);
-    newLevel.addSegment(-18, 10, -18, 11);
-    newLevel.addSegment(-18, 11, -18, 12);
-    newLevel.addSegment(-18, 12, -18, 13);
-    newLevel.addSegment(-18, 13, -17, 13);
-    newLevel.addSegment(-17, 13, -16, 13);
-    newLevel.addSegment(-16, 13, -15, 13);
-    newLevel.addSegment(-15, 13, -14, 13);
-    newLevel.addSegment(-14, 13, -13, 13);
-    newLevel.addSegment(-13, 13, -12, 13);
-    newLevel.addSegment(-12, 13, -11, 13);
-    newLevel.addSegment(-11, 13, -10, 13);
-    newLevel.addSegment(-10, 13, -9, 13);
-    newLevel.addSegment(-9, 13, -8, 13);
-    newLevel.addSegment(-8, 13, -7, 13);
-    newLevel.addSegment(-7, 13, -6, 13);
-    newLevel.addSegment(-22, 13, -22, 12);
-    newLevel.addSegment(-22, 12, -22, 11);
-    newLevel.addSegment(-22, 11, -22, 10);
-    newLevel.addSegment(-22, 10, -22, 9);
-    newLevel.addSegment(-22, 9, -22, 8);
-    newLevel.addSegment(-22, 8, -22, 7);
-    newLevel.addSegment(-22, 7, -22, 6);
-    newLevel.addSegment(-22, 6, -22, 5);
-    newLevel.addSegment(-22, 5, -22, 4);
-    newLevel.addSegment(-22, 4, -22, 3);
-    newLevel.addSegment(-22, 3, -22, 2);
-    newLevel.addSegment(-22, 2, -22, 1);
-    newLevel.addSegment(-22, 1, -22, 0);
-    newLevel.addSegment(-22, 0, -22, -1);
-    newLevel.addSegment(-22, -1, -22, -2);
-    newLevel.addSegment(-22, -2, -22, -3);
-    newLevel.addSegment(-22, -3, -22, -4);
-    newLevel.addSegment(-22, -4, -22, -5);
-    newLevel.addSegment(-22, -5, -22, -6);
-    newLevel.addSegment(-22, -6, -22, -7);
-    newLevel.addSegment(-22, -7, -23, -7);
-    newLevel.addSegment(-23, -7, -24, -7);
-    newLevel.addSegment(-24, -7, -24, -6);
-    newLevel.addSegment(-24, -6, -24, -5);
-    newLevel.addSegment(-24, -5, -24, -4);
-    newLevel.addSegment(-24, -4, -24, -3);
-    newLevel.addSegment(-24, -3, -24, -2);
-    newLevel.addSegment(-24, -2, -24, -1);
-    newLevel.addSegment(-24, -1, -24, 0);
-    newLevel.addSegment(-24, 0, -24, 1);
-    newLevel.addSegment(-24, 1, -24, 2);
-    newLevel.addSegment(-24, 2, -24, 3);
-    newLevel.addSegment(-24, 3, -24, 4);
-    newLevel.addSegment(-24, 4, -24, 5);
-    newLevel.addSegment(-24, 5, -24, 6);
-    newLevel.addSegment(-24, 6, -24, 7);
-    newLevel.addSegment(-24, 7, -24, 8);
-    newLevel.addSegment(-24, 8, -24, 9);
-    newLevel.addSegment(-24, 9, -24, 10);
-    newLevel.addSegment(-24, 10, -24, 11);
-    newLevel.addSegment(-24, 11, -24, 12);
-    newLevel.addSegment(-24, 12, -24, 13);
-    newLevel.addSegment(-24, 13, -23, 13);
-    newLevel.addSegment(-23, 13, -22, 13);
-    newLevel.addSegment(-13, -5, -12, -5);
-    newLevel.addSegment(-12, -5, -11, -5);
-    newLevel.addSegment(-11, -5, -10, -5);
-    newLevel.addSegment(-10, -5, -10, -6);
-    newLevel.addSegment(-10, -6, -10, -7);
-    newLevel.addSegment(-10, -7, -10, -8);
-    newLevel.addSegment(-10, -8, -10, -9);
-    newLevel.addSegment(-10, -9, -10, -10);
-    newLevel.addSegment(-10, -10, -10, -11);
-    newLevel.addSegment(-10, -11, -10, -12);
-    newLevel.addSegment(-10, -12, -10, -13);
-    newLevel.addSegment(-10, -13, -11, -13);
-    newLevel.addSegment(-11, -13, -12, -13);
-    newLevel.addSegment(-12, -13, -13, -13);
-    newLevel.addSegment(-13, -13, -14, -13);
-    newLevel.addSegment(-14, -13, -15, -13);
-    newLevel.addSegment(-15, -13, -16, -13);
-    newLevel.addSegment(-16, -13, -17, -13);
-    newLevel.addSegment(-17, -13, -18, -13);
-    newLevel.addSegment(-18, -13, -19, -13);
-    newLevel.addSegment(-19, -13, -20, -13);
-    newLevel.addSegment(-20, -13, -21, -13);
-    newLevel.addSegment(-21, -13, -22, -13);
-    newLevel.addSegment(-22, -13, -23, -13);
-    newLevel.addSegment(-23, -13, -24, -13);
-    newLevel.addSegment(-24, -13, -24, -12);
-    newLevel.addSegment(-24, -12, -24, -11);
-    newLevel.addSegment(-24, -11, -24, -10);
-    newLevel.addSegment(-24, -10, -23, -10);
-    newLevel.addSegment(-23, -10, -22, -10);
-    newLevel.addSegment(-22, -10, -21, -10);
-    newLevel.addSegment(-21, -10, -20, -10);
-    newLevel.addSegment(-20, -10, -19, -10);
-    newLevel.addSegment(-19, -10, -18, -10);
-    newLevel.addSegment(-18, -10, -17, -10);
-    newLevel.addSegment(-17, -10, -16, -10);
-    newLevel.addSegment(-16, -10, -15, -10);
-    newLevel.addSegment(-15, -10, -14, -10);
-    newLevel.addSegment(-14, -10, -13, -10);
-    newLevel.addSegment(-13, -10, -13, -9);
-    newLevel.addSegment(-13, -9, -13, -8);
-    newLevel.addSegment(-13, -8, -13, -7);
-    newLevel.addSegment(-13, -7, -13, -6);
-    newLevel.addSegment(-13, -6, -13, -5);
-
-    */
-
-    
-    /*
-    for (var ii = -10; ii < 5; ii++) {
-        for (var jj = -10; jj < 5; jj++) {
-
-            newLevel.addBlock(ii, -1, jj);
-            newLevel.addBlock(ii, 3, jj);
-
-            if ((jj == -10)||(ii==-10)||(ii==4)||(jj==4)) {
-                newLevel.addBlock(ii, 1, jj);
-                newLevel.addBlock(ii, 0, jj);
-                newLevel.addBlock(ii, 2, jj);
-
-            }
-
-
-        }
-    }
-
-    
-    */
-
-    //var context = document.getElementById('daggerctx').getContext('2d');
-
-
-    /*
-    newLevel.addSegment(-9, -1, -3, -1);
-    newLevel.addSegment(-3, -5, -3, -1);
-
-    newLevel.addSegment(3, -1, 6, -1);
-    newLevel.addSegment(3, -1, 3, -5);
-
-
-    newLevel.addSegment(-22, -8, -22, 13);
-    newLevel.addSegment(-22, 13, 4, 13);
-    newLevel.addSegment(4, 13, 4, -8);
-    newLevel.addSegment(4, -8, -23, -8);
-    newLevel.addSegment(-20, -6, -20, 9);
-    newLevel.addSegment(-21, 9, -19, 9);
-    newLevel.addSegment(-19, 8, -19, -6);
-    newLevel.addSegment(-20, -6, -20, -6);
-    newLevel.addSegment(-17, -1, -15, -1);
-    newLevel.addSegment(-15, -1, -15, 5);
-    newLevel.addSegment(-15, 5, -17, 5);
-    newLevel.addSegment(-17, 5, -17, -1);
-    newLevel.addSegment(-14, 3, -5, 3);
-    newLevel.addSegment(-5, 3, -5, 1);
-    newLevel.addSegment(-6, 1, -14, 1);
-    newLevel.addSegment(-14, 1, -14, 2);
-    newLevel.addSegment(-13, 3, -13, 8);
-    newLevel.addSegment(-13, 8, -11, 8);
-    newLevel.addSegment(-11, 8, -11, 3);
-    newLevel.addSegment(-9, 4, -9, 10);
-    newLevel.addSegment(-9, 9, -8, 9);
-    newLevel.addSegment(-7, 9, -7, 4);
-    newLevel.addSegment(-7, 3, -9, 4);
-
-
-    newLevel.createMesh();
-    */
-
-
-    //newLevel.draw();
-
+   
     context.clearRect(0, 0, CanvasWidth, CanvasHeight);
     //context.fillStyle = "gray";
     //context.fillRect(0, 0, CanvasWidth, CanvasHeight);
@@ -1473,7 +1022,7 @@ function DrawScene() {
 
     var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 
-    //draw everything
+   
 
     moveCamera();
 
@@ -1487,82 +1036,14 @@ function DrawScene() {
         ctxdata[i+3] = 255;
 
     }
-
-
     
 
-
-    //context.putImageData(ctxdata, 0, 0);
+  
 
     var CenterX = CanvasWidth / 2;
     var CenterY = CanvasHeight / 2;
 
-    /*
-
-    var PointList = new Array();
-    var VertexList = new Array();
-    // For each vertex point
-
-    var cosx = Math.cos(CameraRot.x);
-    var cosy = Math.cos(CameraRot.y);
-    var cosz = Math.cos(CameraRot.z);
-    var sinx = Math.sin(CameraRot.x);
-    var siny = Math.sin(CameraRot.y);
-    var sinz = Math.sin(CameraRot.z);
-
     
-
-
-    for (var i = 0; i < CubeVertex.length; i++) {
-        // The resulting vertex point we are working on
-        // Note that we are creating a new object, not making a copy-reference
-        var WorkingVertex = { x: CubeVertex[i].x, y: CubeVertex[i].y, z: CubeVertex[i].z }
-
-       
-
-        var xdif = CubeVertex[i].x - CameraPos.x;
-        var ydif = CubeVertex[i].y - CameraPos.y;
-        var zdif = CubeVertex[i].z - CameraPos.z;
-        
-
-        //transform the 3d points to the camera perspective
-        WorkingVertex.x = cosy * (sinz * ydif + cosz * xdif) - siny * zdif;
-        WorkingVertex.y = sinx * (cosy * zdif + siny*(sinz * ydif + cosz * xdif)) + cosx * (cosz * ydif - sinz * xdif);
-        WorkingVertex.z = cosx * (cosy * zdif + siny * (sinz * ydif + cosz * xdif)) - sinx * (cosz * ydif - sinz * xdif);
-
-        
-
-        VertexList[i] = WorkingVertex;
-
-        // Convert from x,y,z to x,y
-        // This is called a projection transform
-        // We are projecting from 3D back to 2D
-        var ScreenX = (RatioConst * (WorkingVertex.x)) / (WorkingVertex.z);
-        var ScreenY = (RatioConst * (WorkingVertex.y)) / (WorkingVertex.z);
-
-        // Save this on-screen position to render the line locations
-        PointList[i] = { x: CenterX + ScreenX, y: CenterY + ScreenY };
-    }
-    
-    for (var i = 0; i < CubeFaces.length; i++) {
-
-        if (isFrontFace(CubeVertex[CubeFaces[i].a], CubeVertex[CubeFaces[i].b], CubeVertex[CubeFaces[i].c], CubeFaces[i].i) >= 1.57) {
-
-        
-
-            // Find the four points we are working on
-            var PointA = PointList[CubeFaces[i].a];
-            var PointB = PointList[CubeFaces[i].b];
-            var PointC = PointList[CubeFaces[i].c];
-
-           
-                DrawTri(PointA.x, PointA.y, PointB.x, PointB.y, PointC.x, PointC.y);
-
-            
-        }
-    }
-
-    */
 
     newLevel.draw();
 
@@ -1634,9 +1115,7 @@ function isFrontFace(PointA, PointB, PointC, num) {
     //var crossPro = { x: (vertexA.y * vertexB.z - vertexA.z * vertexB.y), y: -1 * (vertexA.x * vertexB.z - vertexA.z * vertexB.x), z: (vertexA.x * vertexB.y - vertexA.y * vertexB.x) };
 
     var crossPro = { x: (vertexA.y * vertexB.z - vertexA.z * vertexB.y), y: -1 * (vertexA.x * vertexB.z - vertexA.z * vertexB.x), z: (vertexA.x * vertexB.y - vertexA.y * vertexB.x) };
-    //   x: Ay * Bz - Az * By
-    //   y: -(Ax * Bz - Az * Bx)
-    //   z: Ax * By - Ay * Bx
+ 
 
 
 
@@ -1762,9 +1241,7 @@ function isFrontFace3(PointA, PointB, PointC, num) {
 
     //var crossPro = { x: (PointA.y * PointB.z - PointA.z * PointB.y), y: -1 * (PointA.x * PointB.z - PointA.z * PointB.x), z: (PointA.x * PointB.y - PointA.y * PointB.x) };
     var crossPro = { x: (vertexA.y * vertexB.z - vertexA.z * vertexB.y), y: -1 * (vertexA.x * vertexB.z - vertexA.z * vertexB.x), z: (vertexA.x * vertexB.y - vertexA.y * vertexB.x) };
-    //   x: Ay * Bz - Az * By
-    //   y: -(Ax * Bz - Az * Bx)
-    //   z: Ax * By - Ay * Bx
+   
 
     //var cameraToPoint = { x: PointA.x - CameraPos.x, y: PointA.y - CameraPos.y, z: PointA.z - CameraPos.z };
 
@@ -1797,44 +1274,7 @@ function isFrontFace3(PointA, PointB, PointC, num) {
 }
 
 
-function isFrontFace2(PointA, PointB, PointC) {
 
-
-
-    var vertexA = { x: PointB.x - PointA.x, y: PointB.y - PointA.y, z: PointB.z - PointA.z };
-    var vertexB = { x: PointC.x - PointA.x, y: PointC.y - PointA.y, z: PointC.z - PointA.z };
-
-    var temp = vectorLength(vertexA.x, vertexA.y, vertexA.z);
-
-    vertexA.x = vertexA.x / temp;
-    vertexA.y = vertexA.y / temp;
-    vertexA.z = vertexA.z / temp;
-
-    temp = vectorLength(vertexB.x, vertexB.y, vertexB.z);
-
-    vertexB.x = vertexB.x / temp;
-    vertexB.y = vertexB.y / temp;
-    vertexB.z = vertexB.z / temp;
-
-
-    //outputdiv.innerHTML += '  ' + JSON.stringify(PointB);
-
-    //var crossPro = { x: (PointA.y * PointB.z - PointA.z * PointB.y), y: -1 * (PointA.x * PointB.z - PointA.z * PointB.x), z: (PointA.x * PointB.y - PointA.y * PointB.x) };
-    var crossPro = { x: (vertexA.y * vertexB.z - vertexA.z * vertexB.y), y: -1 * (vertexA.x * vertexB.z - vertexA.z * vertexB.x), z: (vertexA.x * vertexB.y - vertexA.y * vertexB.x) };
-    //   x: Ay * Bz - Az * By
-    //   y: -(Ax * Bz - Az * Bx)
-    //   z: Ax * By - Ay * Bx
-
-    //outputdiv.innerHTML += '   ' + crossPro.z;
-
-    if (crossPro.z <= 0.05) {
-        return true;
-
-    }
-
-
-
-}
 
 function DrawSprite(x, y, image, width, height) {
 
@@ -2145,16 +1585,16 @@ function color(r, g, b, a) {
     this.a = a;
 }
 
-function setPixel(x, y, c) {
+function setPixel(x, y, c, intensity) {
 
     x = Math.floor(x);
     y = Math.floor(y);
 
     var index = (x + y * CanvasWidth) * 4;
-    ctxdata[index + 0] = Math.floor(c.r);//color.r;
-    ctxdata[index + 1] = Math.floor(c.b);//color.g;
-    ctxdata[index + 2] = Math.floor(c.g);//color.b;
-    ctxdata[index + 3] = 255;//color.a;
+    ctxdata[index + 0] = Math.floor(Math.min(c.r*intensity, 1.2*c.r));//color.r;
+    ctxdata[index + 1] = Math.floor(Math.min(c.b*intensity, 1.2*c.g));//color.g;
+    ctxdata[index + 2] = Math.floor(Math.min(c.g*intensity, 1.2*c.b));//color.b;
+    //ctxdata[index + 3] = 255;//color.a;
 }
 
 function interpolateColors2(f, color1, color2) {
@@ -2211,275 +1651,11 @@ function DrawTri(x1, y1, x2, y2, x3, y3, tricolor) {
     context.stroke();
     context.fill();
 
-    // Revert context
-    context.restore();
+  
 
-    // Done rendering triangle
 };
 
-function ScanlineTri2222(x1,y1,x2,y2,x3,y3) { //222
 
-    
-
-    //var wtf = { r: ColorA.r, g: ColorA.g, b: ColorA.b };
-    shadedtris++;
-
-
-    var skipline = 1;
-
-
-    var tempPoint = null;
-
-    var pointList = new Array();
-    /*
-    pointList[0] = { x: PointA.x, y: PointA.y, color: { r: ColorA.r, g: ColorA.g, b: ColorA.b } }; //TOP
-    pointList[1] = { x: PointB.x, y: PointB.y, color: { r: ColorB.r, g: ColorB.g, b: ColorB.b } }; //MID
-    pointList[2] = { x: PointC.x, y: PointC.y, color: { r: ColorC.r, g: ColorC.g, b: ColorC.b } }; //BOT
-    */
-
-    pointList[0] = { x: Math.floor(x1), y: Math.floor(y1) }; //TOP
-    pointList[1] = { x: Math.floor(x2), y: Math.floor(y2) }; //MID
-    pointList[2] = { x: Math.floor(x3), y: Math.floor(y3) }; //BOT
-
-
-    if (pointList[1].y < pointList[0].y) {
-        tempPoint = pointList[0];
-        pointList[0] = pointList[1];
-        pointList[1] = tempPoint;
-
-    }
-
-    if (pointList[2].y < pointList[0].y) {
-        tempPoint = pointList[0];
-        pointList[0] = pointList[2];
-        pointList[2] = tempPoint;
-
-    }
-
-    if (pointList[2].y < pointList[1].y) {
-        tempPoint = pointList[1];
-        pointList[1] = pointList[2];
-        pointList[2] = tempPoint;
-
-    }
-
-
-
-
-
-
-
-    var TopY = pointList[0].y;
-    var BottomY = pointList[2].y;
-
-    var Edges = [{ a: 0, b: 1 }, { a: 0, b: 2 }, { a: 1, b: 2 }];
-    var Intercepts = new Array();
-    var Slopes = new Array();
-    var ShadeSlope = new Array();
-
-
-    for (var i = 0; i < 3; i++) {
-
-
-        if (pointList[Edges[i].a].x  == pointList[Edges[i].b].x) {
-
-            Slopes[i] = 9999;
-            Intercepts[i] = pointList[Edges[i].a].x;
-
-        }
-        else {
-
-
-            Slopes[i] = (pointList[Edges[i].b].y - pointList[Edges[i].a].y) / (pointList[Edges[i].b].x - pointList[Edges[i].a].x);
-            Intercepts[i] = pointList[Edges[i].a].y - Slopes[i] * pointList[Edges[i].a].x;
-        }
-
-
-
-
-        //var colorchange = { r: pointList[Edges[i].b].color.r - pointList[Edges[i].a].color.r, b: pointList[Edges[i].b].color.b - pointList[Edges[i].a].color.b, g: pointList[Edges[i].b].color.g - pointList[Edges[i].a].color.g };
-        /*
-        if (pointList[Edges[i].b].y - pointList[Edges[i].a].y < 1) {
-
-            ShadeSlope[i] = new color(0, 0, 0, 255);
-
-        }
-        else {
-            colorchange.r = colorchange.r / (pointList[Edges[i].b].y - pointList[Edges[i].a].y);
-            colorchange.g = colorchange.g / (pointList[Edges[i].b].y - pointList[Edges[i].a].y);
-            colorchange.b = colorchange.b / (pointList[Edges[i].b].y - pointList[Edges[i].a].y);
-
-            ShadeSlope[i] = colorchange;
-        }
-        */
-
-
-    }
-
-
-    for (var y = TopY; y < BottomY; y++) {
-        // Find our min x and max x (default to out of bounds to begin with)
-        var MinX = 2000;
-        var MaxX = -1;
-        //var LeftShade = new color(0, 0, 0, 255);
-        //var RightShade = new color(0, 0, 0, 255);
-
-        // For each edge
-        for (var i = 0; i < 3; i++) {
-            // Find the edge vertices (-1 because our arrays start at 0)
-            var a = Edges[i].a;
-            var b = Edges[i].b;
-
-            // If we are in the range of this line, find the min/max
-            if (y > pointList[a].y && y < pointList[b].y) {
-                // Compute the horizontal intersection
-
-                if (Slopes[i] == 9999) {
-
-                    var x = Intercepts[i];
-
-                }
-                else {
-
-                    var x = (y - Intercepts[i]) / Slopes[i];
-
-                }
-                // Save if new min or max values
-
-                if (x < MinX) {
-                    MinX = x;
-                    
-
-                    /*
-                    LeftShade.r = pointList[a].color.r + ShadeSlope[i].r * (y - pointList[a].y);
-                    LeftShade.g = pointList[a].color.g + ShadeSlope[i].g * (y - pointList[a].y);
-                    LeftShade.b = pointList[a].color.b + ShadeSlope[i].b * (y - pointList[a].y);
-                    */
-
-                }
-                if (x > MaxX) {
-                    MaxX = x;
-
-                    /*
-
-                    RightShade.r = pointList[a].color.r + ShadeSlope[i].r * (y - pointList[a].y);
-                    RightShade.g = pointList[a].color.g + ShadeSlope[i].g * (y - pointList[a].y);
-                    RightShade.b = pointList[a].color.b + ShadeSlope[i].b * (y - pointList[a].y);
-                    */
-                   
-
-                }
-
-                //MinX = Math.min(MinX, x);
-                //MaxX = Math.max(MaxX, x);
-            }
-        }
-
-        if (MaxX < MinX) {
-
-            //nothing
-        }
-        else {
-
-
-
-
-            //MaxX = Math.floor(MaxX);
-            //MinX = Math.floor(MinX);
-
-
-
-            /*
-            var ColorGrad = new color(0, 0, 0, 255);
-
-            ColorGrad.r = (RightShade.r - LeftShade.r) / (MaxX - MinX);
-            ColorGrad.g = (RightShade.g - LeftShade.g) / (MaxX - MinX);
-            ColorGrad.b = (RightShade.b - LeftShade.b) / (MaxX - MinX);
-
-            var frac = 0;
-
-            var tempcolor = new color(0, 0, 0, 255);
-
-            tempcolor.r = LeftShade.r;
-            tempcolor.g = LeftShade.g;
-            tempcolor.b = LeftShade.b;
-            // Fill each pixel, using a line, for the given color
-
-
-
-
-
-            context.lineWidth = skipline + 2;
-            */
-
-
-            //outputdiv.innerHTML += wtf.r + '  ' + '<br>';
-
-
-            /*
-            var my_gradient = context.createLinearGradient(Math.floor(MinX-1), 0, Math.floor(MaxX+1), 0);
-            my_gradient.addColorStop(0, 'rgb(' + Math.floor(LeftShade.r) + ',' + Math.floor(LeftShade.g) + ',' + Math.floor(LeftShade.b) + ' )');
-            my_gradient.addColorStop(1, 'rgb(' + Math.floor(RightShade.r) + ',' + Math.floor(RightShade.g) + ',' + Math.floor(RightShade.b) + ' )');
-
-            context.strokeStyle = my_gradient;
-            
-            //context.strokeStyle = 'rgb(' + Math.floor(LeftShade.r) + ',' + Math.floor(LeftShade.g) + ',' + Math.floor(LeftShade.b) + ' )';
-
-            context.beginPath();
-            context.moveTo(Math.floor(MinX-1), Math.floor(y+1.5));
-            context.lineTo(Math.floor(MaxX+1), Math.floor(y+1.5 ));
-            context.stroke();
-
-            */
-
-
-
-
-            //outputtext += 'MIN:  ' + MinX + '  ' + 'MAX:  ' + MaxX + '  colors:  ' + tempcolor.r + '  ' + tempcolor.g + '  ' + tempcolor.b + '<BR>  ';
-
-
-
-
-
-            for (var fuckme = MinX; fuckme < MaxX ; fuckme++) {
-
-                //context.strokeStyle = 'rgb(' + Math.floor(LeftShade.r + ColorGrad.r * (xi - MinX)) + ',' + Math.floor(LeftShade.g + ColorGrad.g * (xi - MinX)) + ',' + Math.floor(LeftShade.b + ColorGrad.b * (xi - MinX)) + ' )';
-                if (fuckme < 0) {
-                    //MinX = 0;
-
-                }
-                else if (fuckme > CanvasWidth) {
-                    //MaxX = CanvasWidth;
-
-                }
-                else {
-
-
-
-                    setPixel(fuckme, y);
-                }
-                //tempcolor.r += ColorGrad.r;
-                //tempcolor.g += ColorGrad.g;
-                //tempcolor.b += ColorGrad.b;
-
-
-            }
-
-
-
-
-
-
-
-        }
-    }
-    //context.restore();
-
-
-
-    //debugdiv.innerHTML += outputtext;
-
-}
 
 
 
@@ -2594,7 +1770,7 @@ function ScanlineTri2(x1, y1, x2, y2, x3, y3, ColorA, ColorB, ColorC) { //scanli
     
 
     for (var y = TopY; y < BottomY; y++) {
-        // Find our min x and max x (default to out of bounds to begin with)
+        
         var MinX = 2000;
         var MaxX = -1;
         var LeftShade = new color(0, 0, 0, 255);
@@ -2602,13 +1778,13 @@ function ScanlineTri2(x1, y1, x2, y2, x3, y3, ColorA, ColorB, ColorC) { //scanli
 
         // For each edge
         for (var i = 0; i < 3; i++) {
-            // Find the edge vertices (-1 because our arrays start at 0)
+            
             var a = Edges[i].a;
             var b = Edges[i].b;
 
             // If we are in the range of this line, find the min/max
             if (y > pointList[a].y && y < pointList[b].y) {
-                // Compute the horizontal intersection
+                
 
                 if (Slopes[i] == 9999) {
 
@@ -2620,7 +1796,7 @@ function ScanlineTri2(x1, y1, x2, y2, x3, y3, ColorA, ColorB, ColorC) { //scanli
                     var x = (y - Intercepts[i]) / Slopes[i];
 
                 }
-                // Save if new min or max values
+                
 
                 if (x < MinX) {
                     MinX = x;
@@ -2646,8 +1822,7 @@ function ScanlineTri2(x1, y1, x2, y2, x3, y3, ColorA, ColorB, ColorC) { //scanli
 
                 }
 
-                //MinX = Math.min(MinX, x);
-                //MaxX = Math.max(MaxX, x);
+               
             }
         }
 
@@ -2660,8 +1835,7 @@ function ScanlineTri2(x1, y1, x2, y2, x3, y3, ColorA, ColorB, ColorC) { //scanli
 
 
 
-            //MaxX = Math.floor(MaxX);
-            //MinX = Math.floor(MinX);
+       
 
 
 
@@ -2679,7 +1853,7 @@ function ScanlineTri2(x1, y1, x2, y2, x3, y3, ColorA, ColorB, ColorC) { //scanli
             tempcolor.r = LeftShade.r;
             tempcolor.g = LeftShade.g;
             tempcolor.b = LeftShade.b;
-            // Fill each pixel, using a line, for the given color
+            
 
 
 
@@ -2717,14 +1891,14 @@ function ScanlineTri2(x1, y1, x2, y2, x3, y3, ColorA, ColorB, ColorC) { //scanli
 
 
 
-            for (var fuckme = MinX; fuckme < MaxX ; fuckme++) {
+            for (var currentx = MinX; currentx < MaxX ; currentx++) {
 
                 //context.strokeStyle = 'rgb(' + Math.floor(LeftShade.r + ColorGrad.r * (xi - MinX)) + ',' + Math.floor(LeftShade.g + ColorGrad.g * (xi - MinX)) + ',' + Math.floor(LeftShade.b + ColorGrad.b * (xi - MinX)) + ' )';
-                if (fuckme < 0) {
+                if (currentx < 0) {
                     //MinX = 0;
 
                 }
-                else if (fuckme > CanvasWidth) {
+                else if (currentx > CanvasWidth) {
                     //MaxX = CanvasWidth;
 
                 }
@@ -2732,7 +1906,7 @@ function ScanlineTri2(x1, y1, x2, y2, x3, y3, ColorA, ColorB, ColorC) { //scanli
 
 
 
-                    setPixel(fuckme, y, tempcolor);
+                    setPixel(currentx, y, tempcolor);
                 }
                 tempcolor.r += ColorGrad.r;
                 tempcolor.g += ColorGrad.g;
@@ -2762,7 +1936,7 @@ function ScanlineTri3(PointA, PointB, PointC, ColorA, UVA, UVB, UVC) { //scanlin
 
 
 
-    var wtf = { r: ColorA.r, g: ColorA.g, b: ColorA.b };
+    
     shadedtris++;
 
 
@@ -2779,9 +1953,9 @@ function ScanlineTri3(PointA, PointB, PointC, ColorA, UVA, UVB, UVC) { //scanlin
     */
 
 
-    pointList[0] = { x: Math.floor(PointA.x), y: Math.floor(PointA.y), z: PointA.z }; //TOP
-    pointList[1] = { x: Math.floor(PointB.x), y: Math.floor(PointB.y), z: PointB.z }; //MID
-    pointList[2] = { x: Math.floor(PointC.x), y: Math.floor(PointC.y), z: PointC.z }; //BOT
+    pointList[0] = { x: Math.floor(PointA.x), y: Math.floor(PointA.y), z: 1 / PointA.z, su: UVA.u / PointA.z, sv: UVA.v / PointA.z }; //TOP
+    pointList[1] = { x: Math.floor(PointB.x), y: Math.floor(PointB.y), z: 1 / PointB.z, su: UVB.u / PointB.z, sv: UVB.v / PointB.z }; //MID
+    pointList[2] = { x: Math.floor(PointC.x), y: Math.floor(PointC.y), z: 1 / PointC.z, su: UVC.u / PointC.z, sv: UVC.v / PointC.z }; //BOT
 
     if (pointList[1].y < pointList[0].y) {
         tempPoint = pointList[0];
@@ -2817,7 +1991,8 @@ function ScanlineTri3(PointA, PointB, PointC, ColorA, UVA, UVB, UVC) { //scanlin
     var Intercepts = new Array();
     var Slopes = new Array();
     var ShadeSlope = new Array();
-
+    var TextureGrad = new Array();
+    var TextureIntercept;
 
     for (var i = 0; i < 3; i++) {
 
@@ -2835,10 +2010,17 @@ function ScanlineTri3(PointA, PointB, PointC, ColorA, UVA, UVB, UVC) { //scanlin
         }
 
         
+        if (pointList[Edges[i].a].y == pointList[Edges[i].b].y) {
+            TextureGrad[i] = {du:0,dv:0,dz:0};
+
+
+        }
+        else {
+
+            TextureGrad[i] = { du: (pointList[Edges[i].b].su - pointList[Edges[i].a].su) / (pointList[Edges[i].b].y - pointList[Edges[i].a].y), dv: (pointList[Edges[i].b].sv - pointList[Edges[i].a].sv) / (pointList[Edges[i].b].y - pointList[Edges[i].a].y), dz: (pointList[Edges[i].b].z - pointList[Edges[i].a].z) / (pointList[Edges[i].b].y - pointList[Edges[i].a].y), };
+
+        }
         
-
-
-
 
 
     }
@@ -2850,22 +2032,25 @@ function ScanlineTri3(PointA, PointB, PointC, ColorA, UVA, UVB, UVC) { //scanlin
         TopY = 0;
     }
 
+    var LeftTexture = {u:0,v:0,z:0};
+    var RightTexture = {u:0,v:0,z:0};
+
 
     for (var y = TopY; y <= BottomY; y++) {
-        // Find our min x and max x (default to out of bounds to begin with)
+        
         var MinX = 2000;
         var MaxX = -1;
   
 
         // For each edge
         for (var i = 0; i < 3; i++) {
-            // Find the edge vertices (-1 because our arrays start at 0)
+            
             var a = Edges[i].a;
             var b = Edges[i].b;
 
             // If we are in the range of this line, find the min/max
             if (y >= pointList[a].y && y <= pointList[b].y) {
-                // Compute the horizontal intersection
+                
 
                 if (Slopes[i] == 9999) {
 
@@ -2877,12 +2062,17 @@ function ScanlineTri3(PointA, PointB, PointC, ColorA, UVA, UVB, UVC) { //scanlin
                     var x = (y - Intercepts[i]) / Slopes[i];
 
                 }
-                // Save if new min or max values
+                
 
                 if (x < MinX) {
                     MinX = x;
 
+                    LeftTexture.u = pointList[a].su + TextureGrad[i].du * (y - pointList[a].y);
+                    LeftTexture.v = pointList[a].sv + TextureGrad[i].dv * (y - pointList[a].y);
+                    LeftTexture.z = pointList[a].z + TextureGrad[i].dz * (y - pointList[a].y);
 
+
+                    
 
 
 
@@ -2891,7 +2081,9 @@ function ScanlineTri3(PointA, PointB, PointC, ColorA, UVA, UVB, UVC) { //scanlin
                     MaxX = x;
 
 
-
+                    RightTexture.u = pointList[a].su + TextureGrad[i].du * (y - pointList[a].y);
+                    RightTexture.v = pointList[a].sv + TextureGrad[i].dv * (y - pointList[a].y);
+                    RightTexture.z = pointList[a].z + TextureGrad[i].dz * (y - pointList[a].y);
 
 
                 }
@@ -2907,8 +2099,23 @@ function ScanlineTri3(PointA, PointB, PointC, ColorA, UVA, UVB, UVC) { //scanlin
         else {
 
 
+            var TextureGrad2 = {du:0,dv:0,dz:0};
+
+            TextureGrad2.du = (RightTexture.u - LeftTexture.u) / (MaxX - MinX);
+            TextureGrad2.dv = (RightTexture.v - LeftTexture.v) / (MaxX - MinX);
+            TextureGrad2.dz = (RightTexture.z - LeftTexture.z) / (MaxX - MinX);
+
+            
+
+            var temptex = {su:0,sv:0,sz:0};
+
+            temptex.su = LeftTexture.u;
+            temptex.sv = LeftTexture.v;
+            temptex.sz = LeftTexture.z;
 
 
+            var uindex;
+            var vindex;
 
             for (var writex = MinX; writex < MaxX ; writex++) {
 
@@ -2924,11 +2131,18 @@ function ScanlineTri3(PointA, PointB, PointC, ColorA, UVA, UVB, UVC) { //scanlin
                 else {
 
 
+                    uindex = temptex.su / temptex.sz;
+                    vindex = temptex.sv / temptex.sz;
 
-                    setPixel(writex, y, wtf);
+
+
+
+                    setPixel(writex, y, getPixel(uindex,vindex), ColorA);
                 }
               
-
+                temptex.su += TextureGrad2.du;
+                temptex.sv += TextureGrad2.dv;
+                temptex.sz += TextureGrad2.dz;
 
             }
 
@@ -2945,5 +2159,26 @@ function ScanlineTri3(PointA, PointB, PointC, ColorA, UVA, UVB, UVC) { //scanlin
 
 
     //debugdiv.innerHTML += outputtext;
+
+}
+
+
+
+function getPixel(u, v) {
+
+    
+
+    var x = Math.floor(u * brickwidth);
+    var y = Math.floor(v * brickheight);
+
+    //console.log("x :  " + x + "  y : " + y);
+
+    var index = (y*brickwidth+x)*4;
+
+    var color = { r: brickData[index], g: brickData[index + 1], b: brickData[index + 2], a: 255 };
+
+    return color;
+
+
 
 }
