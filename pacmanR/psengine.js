@@ -11,6 +11,7 @@ var renderImageData = null;
 
 
 var ctxdata;
+var ctximage;
 
 var CanvasWidth;
 var CanvasHeight;
@@ -21,6 +22,9 @@ var BackContextHandle = null;
 
 var CanvasHandle = null;
 var ContextHandle = null;
+
+
+
 
 function psengine() {
 
@@ -211,6 +215,12 @@ function levelData() {
 
 
     this.blocksize = .5;
+
+    this.CubeUVs =
+[
+    { a:{ u:0, v:0 }, b:{ u:0, v:1 }, c:{ u:1, v:1 } },
+    { a:{ u:0, v:0 }, b:{ u:1, v:0 }, c:{ u:1, v:1 } }]
+
 }
 
 function sortFunction(a, b) {
@@ -232,8 +242,8 @@ levelData.prototype.addFloor = function (x, z) {
 
 
 
-    this.wallFaces.push({ a: nextindex, b: nextindex + 2, c: nextindex + 3, color: { r: 72, g: 72, b: 72 } });
-    this.wallFaces.push({ a: nextindex + 3, b: nextindex + 1, c: nextindex, color: { r: 72, g: 72, b: 72 } });
+    this.wallFaces.push({ a: nextindex, b: nextindex + 2, c: nextindex + 3, f:0, color: { r: 72, g: 72, b: 72 } });
+    this.wallFaces.push({ a: nextindex + 3, b: nextindex + 1, c: nextindex, f:1, color: { r: 72, g: 72, b: 72 } });
 
 
 };
@@ -290,23 +300,23 @@ levelData.prototype.addBlock = function (x1, y1, z1) {
 
     var blockcolor = { r: 136, g: 0, b: 0 };
 
-    this.wallFaces.push({ a: nextindex, b: nextindex + 1, c: nextindex + 2, color: { r: 136, g: 0, b: 0 } });
-    this.wallFaces.push({ a: nextindex + 2, b: nextindex + 3, c: nextindex + 0, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex, b: nextindex + 1, c: nextindex + 2, f:0, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 2, b: nextindex + 3, c: nextindex + 0, f: 1, color: { r: 136, g: 0, b: 0 } });
 
-    this.wallFaces.push({ a: nextindex + 1, b: nextindex + 5, c: nextindex + 6, color: { r: 136, g: 0, b: 0 } });
-    this.wallFaces.push({ a: nextindex + 6, b: nextindex + 2, c: nextindex + 1, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 1, b: nextindex + 5, c: nextindex + 6, f: 0, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 6, b: nextindex + 2, c: nextindex + 1, f: 1, color: { r: 136, g: 0, b: 0 } });
 
-    this.wallFaces.push({ a: nextindex + 5, b: nextindex + 4, c: nextindex + 7, color: { r: 136, g: 0, b: 0 } });
-    this.wallFaces.push({ a: nextindex + 7, b: nextindex + 6, c: nextindex + 5, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 5, b: nextindex + 4, c: nextindex + 7, f: 0, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 7, b: nextindex + 6, c: nextindex + 5, f: 1, color: { r: 136, g: 0, b: 0 } });
 
-    this.wallFaces.push({ a: nextindex + 4, b: nextindex + 0, c: nextindex + 3, color: { r: 136, g: 0, b: 0 } });
-    this.wallFaces.push({ a: nextindex + 3, b: nextindex + 7, c: nextindex + 4, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 4, b: nextindex + 0, c: nextindex + 3, f: 0, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 3, b: nextindex + 7, c: nextindex + 4, f: 1, color: { r: 136, g: 0, b: 0 } });
 
-    this.wallFaces.push({ a: nextindex + 3, b: nextindex + 2, c: nextindex + 6, color: { r: 136, g: 0, b: 0 } });
-    this.wallFaces.push({ a: nextindex + 6, b: nextindex + 7, c: nextindex + 3, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 3, b: nextindex + 2, c: nextindex + 6, f: 0, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 6, b: nextindex + 7, c: nextindex + 3, f: 1, color: { r: 136, g: 0, b: 0 } });
 
-    this.wallFaces.push({ a: nextindex + 0, b: nextindex + 5, c: nextindex + 1, color: { r: 136, g: 0, b: 0 } });
-    this.wallFaces.push({ a: nextindex + 0, b: nextindex + 4, c: nextindex + 5, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 0, b: nextindex + 5, c: nextindex + 1, f: 0, color: { r: 136, g: 0, b: 0 } });
+    this.wallFaces.push({ a: nextindex + 0, b: nextindex + 4, c: nextindex + 5, f: 1, color: { r: 136, g: 0, b: 0 } });
 
 
 
@@ -418,7 +428,7 @@ levelData.prototype.draw = function () {
             var ScreenY = (RatioConst * (WorkingVertex.y)) / (.1);
 
 
-            PointList[i] = { x: CenterX + ScreenX, y: CenterY + ScreenY};
+            
 
         }
         else {
@@ -427,11 +437,13 @@ levelData.prototype.draw = function () {
             var ScreenY = (RatioConst * (WorkingVertex.y)) / (WorkingVertex.z);
 
 
-            PointList[i] = { x: CenterX + ScreenX, y: CenterY + ScreenY };
-
+            
 
         }
 
+
+        //PointList[i] = { x: CenterX + ScreenX, y: CenterY + ScreenY };
+        PointList[i] = { x: CenterX + ScreenX, y: CenterY + ScreenY, z:WorkingVertex.z };
 
         
 
@@ -453,7 +465,7 @@ levelData.prototype.draw = function () {
         //angletocamera = isFrontFace3(VertexList[this.wallFaces[i].a], VertexList[this.wallFaces[i].b], VertexList[this.wallFaces[i].c], 0);
 
         orderedFaces[i] = {
-            a: this.wallFaces[i].a, b: this.wallFaces[i].b, c: this.wallFaces[i].c, d: angletocamera, color: { r: this.wallFaces[i].color.r, b: this.wallFaces[i].color.b, g: this.wallFaces[i].color.g, type: 0 }
+            a: this.wallFaces[i].a, b: this.wallFaces[i].b, c: this.wallFaces[i].c, d: angletocamera, f: this.wallFaces[i].f, color: { r: this.wallFaces[i].color.r, b: this.wallFaces[i].color.b, g: this.wallFaces[i].color.g, type: 0 }
 
 
         };
@@ -526,6 +538,11 @@ levelData.prototype.draw = function () {
                     var PointB = PointList[orderedFaces[i].b];
                     var PointC = PointList[orderedFaces[i].c];
 
+                   
+
+                    var UVA = this.CubeUVs[orderedFaces[i].f].a;
+                    var UVB = this.CubeUVs[orderedFaces[i].f].b;
+                    var UVC = this.CubeUVs[orderedFaces[i].f].c;
 
 
                     var tricolor = { r: 0, g: 0, b: 0 };
@@ -574,7 +591,7 @@ levelData.prototype.draw = function () {
 
 
 
-                    ScanlineTri3(PointA.x, PointA.y, PointB.x, PointB.y, PointC.x, PointC.y, tricolor);
+                    ScanlineTri3(PointA, PointB, PointC, tricolor, UVA, UVB, UVC);
               
                    
 
@@ -694,6 +711,7 @@ var CameraPos = { x: 0, y: 8, z: -10 };
 // Camera rotation (Pitch, yaw, roll)
 var CameraRot = { x: 0, y: 0, z: 0 };
 
+CameraRot.x = (Math.PI / 2);
 
 // Camera distortion
 var RatioConst = 360;
@@ -942,7 +960,8 @@ function moveCamera() {
         CameraRot.y += .05;
     }
 
-    
+    console.log("xrot : " + CameraRot.x + "    yrot : " + CameraRot.y + "zrot : " + CameraRot.z);
+
 }
 
 function Main() {
@@ -1441,8 +1460,9 @@ function Main() {
     //context.fillStyle = "gray";
     //context.fillRect(0, 0, CanvasWidth, CanvasHeight);
 
-    ctxdata = context.getImageData(0, 0, CanvasWidth, CanvasHeight);
+    ctximage = context.getImageData(0, 0, CanvasWidth, CanvasHeight);
 
+    ctxdata = ctximage.data;
 
     DrawScene();
 
@@ -1461,10 +1481,10 @@ function DrawScene() {
     
     for (var i = 0; i < CanvasHeight*CanvasWidth*4; i+=4){
        
-        ctxdata.data[i] = 0;
-        ctxdata.data[i+1] = 0;
-        ctxdata.data[i+2] = 0;
-        ctxdata.data[i+3] = 255;
+        ctxdata[i] = 0;
+        ctxdata[i+1] = 0;
+        ctxdata[i+2] = 0;
+        ctxdata[i+3] = 255;
 
     }
 
@@ -1546,7 +1566,7 @@ function DrawScene() {
 
     newLevel.draw();
 
-    context.putImageData(ctxdata, 0, 0);
+    context.putImageData(ctximage, 0, 0);
 
     requestAnimationFrame(DrawScene);
 
@@ -2131,10 +2151,10 @@ function setPixel(x, y, c) {
     y = Math.floor(y);
 
     var index = (x + y * CanvasWidth) * 4;
-    ctxdata.data[index + 0] = Math.floor(c.r);//color.r;
-    ctxdata.data[index + 1] = Math.floor(c.b);//color.g;
-    ctxdata.data[index + 2] = Math.floor(c.g);//color.b;
-    ctxdata.data[index + 3] = 255;//color.a;
+    ctxdata[index + 0] = Math.floor(c.r);//color.r;
+    ctxdata[index + 1] = Math.floor(c.b);//color.g;
+    ctxdata[index + 2] = Math.floor(c.g);//color.b;
+    ctxdata[index + 3] = 255;//color.a;
 }
 
 function interpolateColors2(f, color1, color2) {
@@ -2738,7 +2758,7 @@ function ScanlineTri2(x1, y1, x2, y2, x3, y3, ColorA, ColorB, ColorC) { //scanli
 }
 
 
-function ScanlineTri3(x1, y1, x2, y2, x3, y3, ColorA) { //scanlinetri3
+function ScanlineTri3(PointA, PointB, PointC, ColorA, UVA, UVB, UVC) { //scanlinetri3
 
 
 
@@ -2759,9 +2779,9 @@ function ScanlineTri3(x1, y1, x2, y2, x3, y3, ColorA) { //scanlinetri3
     */
 
 
-    pointList[0] = { x: Math.floor(x1), y: Math.floor(y1) }; //TOP
-    pointList[1] = { x: Math.floor(x2), y: Math.floor(y2) }; //MID
-    pointList[2] = { x: Math.floor(x3), y: Math.floor(y3) }; //BOT
+    pointList[0] = { x: Math.floor(PointA.x), y: Math.floor(PointA.y), z: PointA.z }; //TOP
+    pointList[1] = { x: Math.floor(PointB.x), y: Math.floor(PointB.y), z: PointB.z }; //MID
+    pointList[2] = { x: Math.floor(PointC.x), y: Math.floor(PointC.y), z: PointC.z }; //BOT
 
     if (pointList[1].y < pointList[0].y) {
         tempPoint = pointList[0];
