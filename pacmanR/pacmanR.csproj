@@ -65,6 +65,8 @@
     <Content Include="img\Bricks.gif" />
     <Content Include="img\pacman.png" />
     <Content Include="index.html" />
+    <None Include="Properties\PublishProfiles\pacmanR - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\pacmanR - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-2.0.2.min.map" />
     <Content Include="Scripts\jquery-2.0.2.min.js" />
     <Content Include="Web.config" />

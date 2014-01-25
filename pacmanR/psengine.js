@@ -386,7 +386,7 @@ levelData.prototype.draw = function () {
     var fps = 1000 / (newtime - oldtime);
     oldtime = newtime;
 
-    outputdiv.innerHTML = 'fps : ' + fps + '   textured tris drawn :  ' + shadedtris + ' , solid tris drawn: ' + solidtris ;
+    
     shadedtris = 0;
     solidtris = 0;
 
